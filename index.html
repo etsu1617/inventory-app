@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>在庫注文依頼</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="在庫注文依頼">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2563eb">
+<link rel="manifest" id="pwa-manifest">
+<link rel="apple-touch-icon" id="pwa-icon">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f5f5f0;--sur:#fff;--bor:#e0dfd8;--tx:#1a1a18;--tx2:#6b6b65;
+  --acc:#2563eb;--acc-l:#eff6ff;--red:#dc2626;--red-l:#fef2f2;
+  --grn:#16a34a;--grn-l:#f0fdf4;--ora:#d97706;--ora-l:#fffbeb;
+  --r:10px;--sh:0 1px 3px rgba(0,0,0,.08)
+}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;font-size:15px}
+#loading{position:fixed;inset:0;background:rgba(255,255,255,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:14px}
+.spin{width:34px;height:34px;border:3px solid var(--bor);border-top-color:var(--acc);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hdr{background:var(--sur);border-bottom:1px solid var(--bor);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.hdr-title{font-size:17px;font-weight:700}
+.sync{font-size:12px;color:var(--tx2);display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:#ccc;transition:background .3s;flex-shrink:0}
+.dot.on{background:var(--grn)}
+.tabs{display:flex;background:var(--sur);border-bottom:1px solid var(--bor);position:sticky;top:51px;z-index:99}
+.tab{flex:1;padding:10px 3px;font-size:11px;text-align:center;cursor:pointer;color:var(--tx2);border:none;background:none;border-bottom:2px solid transparent;font-family:inherit;font-weight:500;transition:all .15s;position:relative}
+.tab.on{color:var(--acc);border-bottom-color:var(--acc)}
+.tbadge{position:absolute;top:5px;right:calc(50% - 20px);background:var(--red);color:#fff;font-size:10px;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.scr{display:none;padding:14px}
+.scr.on{display:block}
+.card{background:var(--sur);border:1px solid var(--bor);border-radius:var(--r);padding:13px;margin-bottom:10px;box-shadow:var(--sh)}
+.chips{display:flex;gap:7px;overflow-x:auto;padding-bottom:3px;margin-bottom:12px;-webkit-overflow-scrolling:touch}
+.chip{padding:6px 13px;border-radius:20px;border:1px solid var(--bor);background:var(--sur);font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;color:var(--tx2);font-family:inherit;flex-shrink:0}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.stabs{display:flex;border-bottom:1px solid var(--bor);margin-bottom:14px}
+.stab{flex:1;padding:10px;font-size:13px;font-weight:500;border:none;background:none;font-family:inherit;cursor:pointer;color:var(--tx2);border-bottom:2px solid transparent;transition:all .15s}
+.stab.on{color:var(--acc);border-bottom-color:var(--acc)}
+.fld{margin-bottom:13px}
+.fld label{font-size:13px;color:var(--tx2);display:block;margin-bottom:5px;font-weight:500}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--bor);border-radius:8px;font-size:15px;background:var(--sur);color:var(--tx);font-family:inherit;appearance:none;-webkit-appearance:none}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+textarea{resize:none;line-height:1.6}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{padding:9px 14px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid var(--bor);background:var(--sur);color:var(--tx);font-family:inherit;font-weight:500;transition:all .12s}
+.btn:active{transform:scale(.97)}
+.bp{background:var(--acc);color:#fff;border-color:var(--acc)}
+.bp:hover{background:#1d4ed8}
+.bd{color:var(--red);border-color:var(--red)}
+.bfull{width:100%}
+.pbts{display:flex;gap:7px}
+.pbt{flex:1;padding:9px 6px;border-radius:8px;border:1px solid var(--bor);background:var(--sur);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;text-align:center;color:var(--tx2)}
+.pbt.pn{background:#f5f5f0;border-color:#aaa;color:var(--tx)}
+.pbt.pu{background:var(--ora-l);border-color:var(--ora);color:var(--ora)}
+.pbt.pc{background:var(--red-l);border-color:var(--red);color:var(--red)}
+.idrop{border:2px dashed var(--bor);border-radius:8px;padding:18px;text-align:center;color:var(--tx2);font-size:13px;cursor:pointer}
+.ipreview{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.ithumb{width:62px;height:62px;border-radius:8px;object-fit:cover;border:1px solid var(--bor);cursor:pointer}
+.oname{font-size:16px;font-weight:700}
+.ometa{font-size:12px;color:var(--tx2);margin-top:5px;line-height:1.6}
+.omemo{font-size:13px;color:var(--tx2);margin-top:8px;padding-top:8px;border-top:1px solid var(--bor)}
+.badge{font-size:11px;padding:3px 8px;border-radius:20px;font-weight:500;white-space:nowrap;flex-shrink:0}
+.bnew{background:var(--acc-l);color:var(--acc)}
+.bpri{font-size:11px;padding:2px 6px;border-radius:4px;font-weight:500}
+.bpn{background:#f5f5f0;color:var(--tx2)}
+.bpu{background:var(--ora-l);color:var(--ora)}
+.bpc{background:var(--red-l);color:var(--red)}
+.arow{display:flex;gap:8px;margin-top:10px}
+.trow{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--bor)}
+.trow:last-child{border-bottom:none}
+.tlabel{font-size:15px}
+.tdesc{font-size:12px;color:var(--tx2);margin-top:2px}
+.twrap{position:relative;width:46px;height:26px;flex-shrink:0}
+.twrap input{opacity:0;width:0;height:0}
+.ttrack{position:absolute;inset:0;background:#ccc;border-radius:13px;cursor:pointer;transition:background .2s}
+.ttrack::before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.twrap input:checked+.ttrack{background:var(--acc)}
+.twrap input:checked+.ttrack::before{transform:translateX(20px)}
+.urlbox{background:var(--bg);border:1px solid var(--bor);border-radius:8px;padding:12px;font-size:12px;color:var(--tx2);word-break:break-all;line-height:1.6;margin-bottom:12px}
+.srow{display:flex;gap:8px;margin-bottom:14px}
+.stitle{font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.empty{text-align:center;padding:44px 20px;color:var(--tx2)}
+.eicon{font-size:38px;margin-bottom:10px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1a18;color:#fff;padding:11px 20px;border-radius:24px;font-size:14px;font-weight:500;z-index:998;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.imodal{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:997}
+.imodal.on{display:flex}
+.imodal img{max-width:92vw;max-height:80vh;border-radius:8px}
+.iclose{position:absolute;top:14px;right:14px;color:#fff;font-size:26px;cursor:pointer;background:rgba(0,0,0,.4);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+</style>
+</head>
+<body>
+<div id="loading"><div class="spin"></div><p style="font-size:13px;color:var(--tx2)">Firebaseに接続中...</p></div>
+<div class="imodal" id="imodal" onclick="closeImg()">
+  <div class="iclose">×</div>
+  <img id="imodal-img" src="">
+</div>
+<div class="hdr">
+  <div class="hdr-title">在庫注文依頼</div>
+  <div class="sync"><span class="dot" id="sdot"></span><span id="slabel">接続中...</span></div>
+</div>
+<div class="tabs">
+  <button class="tab on" onclick="goTab('list',this)">依頼一覧<span class="tbadge" id="tbadge" style="display:none">0</span></button>
+  <button class="tab" onclick="goTab('new',this)">新規依頼</button>
+  <button class="tab" onclick="goTab('items',this)">品物一覧</button>
+  <button class="tab" onclick="goTab('cfg',this)">設定</button>
+  <button class="tab" onclick="goTab('share',this)">共有</button>
+</div>
+<div class="scr on" id="scr-list">
+  <div class="chips" id="order-chips">
+    <button class="chip on" onclick="setOFilter('all',this)">すべて</button>
+    <button class="chip" onclick="setOFilter('新規',this)">未対応</button>
+  </div>
+  <div id="order-list"></div>
+</div>
+<div class="scr" id="scr-new">
+  <div class="fld"><label>カテゴリ</label><select id="n-cat"><option value="">なし</option></select></div>
+  <div class="fld"><label>品目名 <span style="color:var(--red)">*</span></label><input type="text" id="n-item" placeholder="例：ボールペン（黒）"></div>
+  <div class="g2 fld">
+    <div><label>数量 <span style="color:var(--red)">*</span></label><input type="number" id="n-qty" placeholder="0" min="1"></div>
+    <div><label>単位</label><input type="text" id="n-unit" placeholder="個、箱、本..."></div>
+  </div>
+  <div class="fld">
+    <label>優先度</label>
+    <div class="pbts">
+      <button class="pbt pn" onclick="setPri('普通',this)">普通</button>
+      <button class="pbt" onclick="setPri('急ぎ',this)">急ぎ</button>
+      <button class="pbt" onclick="setPri('至急',this)">至急</button>
+    </div>
+  </div>
+  <div class="fld"><label>メモ・補足</label><textarea id="n-memo" rows="3" placeholder="サイズ、色、メーカーなど"></textarea></div>
+  <div class="fld">
+    <label>画像添付</label>
+    <div class="idrop" onclick="document.getElementById('n-imgs').click()">📷 写真を追加する</div>
+    <input type="file" id="n-imgs" accept="image/*" multiple style="display:none" onchange="addImgs(event)">
+    <div class="ipreview" id="n-preview"></div>
+  </div>
+  <button class="btn bp bfull" onclick="submitOrder()">依頼を送信する</button>
+</div>
+<div class="scr" id="scr-items">
+  <div class="stabs">
+    <button class="stab on" id="st-list" onclick="showStab('list')">品物一覧</button>
+    <button class="stab" id="st-reg" onclick="showStab('reg')">品物を登録</button>
+  </div>
+  <div id="sp-list">
+    <div class="chips" id="item-chips"></div>
+    <div id="item-list"></div>
+  </div>
+  <div id="sp-reg" style="display:none">
+    <div class="card">
+      <div class="fld"><label>品物名 <span style="color:var(--red)">*</span></label><input type="text" id="i-name" placeholder="例：ボールペン（黒）"></div>
+      <div class="fld" style="margin-bottom:10px">
+        <label>カテゴリ</label>
+        <div style="display:flex;gap:8px">
+          <select id="i-cat" style="flex:1"></select>
+          <input type="text" id="i-newcat" placeholder="新カテゴリ" style="flex:1">
+        </div>
+        <p style="font-size:11px;color:var(--tx2);margin-top:4px">既存から選ぶか、右に新カテゴリ名を入力</p>
+      </div>
+      <button class="btn bp bfull" onclick="addItem()">登録する</button>
+    </div>
+  </div>
+</div>
+<div class="scr" id="scr-cfg">
+  <div class="stitle">あなたの名前</div>
+  <div class="card" style="margin-bottom:16px"><input type="text" id="cfg-name" placeholder="例：田中" oninput="saveCfg()"></div>
+  <div class="stitle">プッシュ通知</div>
+  <div class="card">
+    <div class="trow">
+      <div><div class="tlabel">新規依頼の通知</div><div class="tdesc">依頼が届いたとき</div></div>
+      <label class="twrap"><input type="checkbox" id="cfg-nn" checked onchange="saveCfg()"><span class="ttrack"></span></label>
+    </div>
+    <div class="trow">
+      <div><div class="tlabel">ステータス変更の通知</div><div class="tdesc">完了・キャンセル時</div></div>
+      <label class="twrap"><input type="checkbox" id="cfg-ns" checked onchange="saveCfg()"><span class="ttrack"></span></label>
+    </div>
+    <div class="trow">
+      <div><div class="tlabel">至急依頼の通知</div><div class="tdesc">優先度「至急」のとき</div></div>
+      <label class="twrap"><input type="checkbox" id="cfg-nu" checked onchange="saveCfg()"><span class="ttrack"></span></label>
+    </div>
+  </div>
+  <button class="btn bfull" style="margin-top:12px;color:var(--acc);border-color:var(--acc)" onclick="askNotif()">ブラウザ通知を許可する</button>
+</div>
+<div class="scr" id="scr-share">
+  <div class="stitle">このアプリのURL</div>
+  <div class="urlbox" id="share-url"></div>
+  <div class="srow">
+    <button class="btn bp" style="flex:1" onclick="copyUrl()">URLをコピー</button>
+    <button class="btn" style="flex:1" onclick="shareUrl()">シェア</button>
+  </div>
+  <div class="stitle">QRコード</div>
+  <div style="display:flex;justify-content:center;padding:10px 0"><canvas id="qr" width="180" height="180"></canvas></div>
+  <p style="font-size:12px;color:var(--tx2);text-align:center">カメラで読み取ると開けます</p>
+</div>
+<div class="toast" id="toast"></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, onValue, update, remove, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+const cfg = {
+  apiKey: "AIzaSyD9WPry8r8zRtBKpla1TQ9HlZSq3CR2zU0",
+  authDomain: "inventory-app-f4962.firebaseapp.com",
+  databaseURL: "https://inventory-app-f4962-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "inventory-app-f4962",
+  storageBucket: "inventory-app-f4962.firebasestorage.app",
+  messagingSenderId: "819589521178",
+  appId: "1:819589521178:web:ecd7df241136a14c0316a3"
+};
+const app = initializeApp(cfg);
+const db = getDatabase(app);
+onValue(ref(db,'.info/connected'), s => {
+  const ok = s.val();
+  document.getElementById('sdot').className = 'dot'+(ok?' on':'');
+  document.getElementById('slabel').textContent = ok ? '同期中' : 'オフライン';
+  if(ok) document.getElementById('loading').style.display='none';
+});
+onValue(ref(db,'orders'), s => {
+  W.orders = {};
+  if(s.exists()) s.forEach(c => { W.orders[c.key]={id:c.key,...c.val()} });
+  renderOrders(); updateBadge();
+});
+onValue(ref(db,'categories'), s => {
+  W.cats = [];
+  if(s.exists()) s.forEach(c => { W.cats.push({id:c.key,name:c.val().name}) });
+  populateCatSelects();
+  renderItemChips();
+});
+onValue(ref(db,'items'), s => {
+  W.items = {};
+  if(s.exists()) s.forEach(c => { W.items[c.key]={id:c.key,...c.val()} });
+  renderItems();
+});
+W.db = db;
+W.fbRef = ref;
+W.fbPush = push;
+W.fbUpdate = update;
+W.fbRemove = remove;
+W.fbReady = true;
+const s = JSON.parse(localStorage.getItem('inv_cfg')||'{}');
+document.getElementById('cfg-name').value = s.name||'';
+document.getElementById('cfg-nn').checked = s.nn!==false;
+document.getElementById('cfg-ns').checked = s.ns!==false;
+document.getElementById('cfg-nu').checked = s.nu!==false;
+</script>
+<script>
+const W = window;
+W.orders = {}; W.cats = []; W.items = {};
+W.oFilter = 'all'; W.iCatFilter = 'all'; W.selPri = '普通'; W.newImgs = [];
+function goTab(name, el) {
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('scr-'+name).classList.add('on');
+  el.classList.add('on');
+  if(name==='share') renderShare();
+  if(name==='cfg') loadCfg();
+  if(name==='items') { renderItems(); renderItemChips(); }
+}
+function renderOrders() {
+  const list = document.getElementById('order-list');
+  let arr = Object.values(W.orders).sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+  if(W.oFilter!=='all') arr = arr.filter(o=>o.status===W.oFilter);
+  if(!arr.length) {
+    list.innerHTML='<div class="empty"><div class="eicon">📋</div><p>依頼はまだありません</p></div>';
+    return;
+  }
+  list.innerHTML = arr.map(o => {
+    const pc = o.priority==='至急'?'bpc':o.priority==='急ぎ'?'bpu':'bpn';
+    const imgs = (o.images||[]).map(s=>'<img class="ithumb" src="'+s+'" onclick="openImg(''+s+'')">').join('');
+    return '<div class="card">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'+
+      '<div style="flex:1;min-width:0">'+
+      '<span class="oname">'+esc(o.item)+'</span>'+
+      '<span class="bpri '+pc+'" style="margin-left:6px">'+( o.priority||'普通')+'</span>'+
+      '</div>'+
+      '<span class="badge bnew">未対応</span>'+
+      '</div>'+
+      '<div class="ometa">'+(o.category?esc(o.category)+' · ':'')+o.qty+esc(o.unit||'個')+' · '+esc(o.sender||'不明')+' · '+fmtDate(o.timestamp)+'</div>'+
+      (o.memo?'<div class="omemo">'+esc(o.memo)+'</div>':'')+
+      (imgs?'<div class="ipreview" style="margin-top:8px">'+imgs+'</div>':'')+
+      '<div class="arow">'+
+      '<button class="btn bp" onclick="doneOrder(''+o.id+'')">完了にする</button>'+
+      '<button class="btn bd" onclick="cancelOrder(''+o.id+'')">キャンセル</button>'+
+      '</div></div>';
+  }).join('');
+}
+function updateBadge() {
+  const n = Object.values(W.orders).filter(o=>o.status==='新規').length;
+  const b = document.getElementById('tbadge');
+  b.textContent=n; b.style.display=n?'flex':'none';
+}
+function setOFilter(f, el) {
+  W.oFilter=f;
+  document.querySelectorAll('#order-chips .chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  renderOrders();
+}
+function doneOrder(id) { deleteOrder(id,'完了'); }
+function cancelOrder(id) { deleteOrder(id,'キャンセル'); }
+function deleteOrder(id, status) {
+  if(!W.fbReady){showToast('接続中...');return}
+  const o = W.orders[id];
+  W.fbRemove(W.fbRef(W.db,'orders/'+id));
+  showToast(status==='完了'?'完了しました ✓':'キャンセルしました');
+  const cfg = JSON.parse(localStorage.getItem('inv_cfg')||'{}');
+  if(cfg.ns!==false && o) notify('ステータス更新','「'+o.item+'」が'+status+'になりました');
+}
+function setPri(p, el) {
+  W.selPri=p;
+  document.querySelectorAll('.pbt').forEach(b=>{b.className='pbt'});
+  el.className='pbt '+(p==='至急'?'pc':p==='急ぎ'?'pu':'pn');
+}
+function addImgs(e) {
+  Array.from(e.target.files).forEach(f=>{
+    const r=new FileReader();
+    r.onload=ev=>{
+      const img=new Image();
+      img.onload=()=>{
+        const c=document.createElement('canvas');
+        const max=800; let w=img.width,h=img.height;
+        if(w>max){h=h*max/w;w=max} if(h>max){w=w*max/h;h=max}
+        c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        W.newImgs.push(c.toDataURL('image/jpeg',.7));
+        renderNewPrev();
+      };
+      img.src=ev.target.result;
+    };
+    r.readAsDataURL(f);
+  });
+}
+function renderNewPrev() {
+  document.getElementById('n-preview').innerHTML=W.newImgs.map((s,i)=>
+    '<img class="ithumb" src="'+s+'" onclick="removeImg('+i+')" title="タップで削除">').join('');
+}
+function removeImg(i){W.newImgs.splice(i,1);renderNewPrev()}
+function submitOrder() {
+  if(!W.fbReady){showToast('接続中です');return}
+  const item=document.getElementById('n-item').value.trim();
+  const qty=document.getElementById('n-qty').value;
+  if(!item||!qty){showToast('品目と数量は必須です');return}
+  const cfg=JSON.parse(localStorage.getItem('inv_cfg')||'{}');
+  W.fbPush(W.fbRef(W.db,'orders'),{
+    item, qty,
+    unit: document.getElementById('n-unit').value.trim()||'個',
+    category: document.getElementById('n-cat').value,
+    priority: W.selPri,
+    memo: document.getElementById('n-memo').value.trim(),
+    images: [...W.newImgs],
+    status:'新規',
+    sender: cfg.name||'不明',
+    timestamp: Date.now()
+  });
+  ['n-item','n-qty','n-unit','n-memo'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('n-cat').value='';
+  W.newImgs=[]; renderNewPrev();
+  document.querySelectorAll('.pbt').forEach(b=>b.className='pbt');
+  document.querySelectorAll('.pbt')[0].className='pbt pn';
+  W.selPri='普通';
+  showToast('依頼を送信しました 📨');
+  if(cfg.nn!==false) notify('新しい注文依頼','「'+item+'」×'+qty+(document.getElementById('n-unit').value||'個'));
+}
+function showStab(name) {
+  const isList=name==='list';
+  document.getElementById('sp-list').style.display=isList?'':'none';
+  document.getElementById('sp-reg').style.display=isList?'none':'';
+  document.getElementById('st-list').className='stab'+(isList?' on':'');
+  document.getElementById('st-reg').className='stab'+(!isList?' on':'');
+}
+function renderItemChips() {
+  const el=document.getElementById('item-chips');
+  if(!el) return;
+  const cats=[...new Set(Object.values(W.items).map(i=>i.category||'カテゴリなし'))].sort();
+  el.innerHTML=[
+    '<button class="chip'+(W.iCatFilter==='all'?' on':'')+'" onclick="setICat('all',this)">すべて</button>',
+    ...cats.map(c=>'<button class="chip'+(W.iCatFilter===c?' on':'')+'" onclick="setICat('+JSON.stringify(c)+',this)">'+esc(c)+'</button>')
+  ].join('');
+}
+function setICat(c, el) {
+  W.iCatFilter=c;
+  document.querySelectorAll('#item-chips .chip').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  renderItems();
+}
+function renderItems() {
+  const el=document.getElementById('item-list');
+  if(!el) return;
+  let arr=Object.values(W.items);
+  if(W.iCatFilter!=='all') arr=arr.filter(i=>(i.category||'カテゴリなし')===W.iCatFilter);
+  arr.sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+  if(!arr.length) {
+    el.innerHTML='<div class="empty"><div class="eicon">📦</div><p>品物が登録されていません<br>「品物を登録」タブから追加してください</p></div>';
+    return;
+  }
+  el.innerHTML=arr.map(item=>{
+    const sn=JSON.stringify(item.name);
+    const sc=JSON.stringify(item.category||'');
+    return '<div class="card" style="display:flex;align-items:center;padding:12px 13px;margin-bottom:8px">'+
+      '<button onclick="jumpOrder('+sn+','+sc+')" style="flex:1;text-align:left;background:none;border:none;cursor:pointer;font-family:inherit;padding:0">'+
+      '<span style="font-size:15px;font-weight:500;color:var(--tx)">'+esc(item.name)+'</span>'+
+      (item.category?'<span style="font-size:11px;color:var(--tx2);margin-left:6px">'+esc(item.category)+'</span>':'')+
+      '<span style="font-size:11px;color:var(--acc);margin-left:6px">→ 依頼する</span>'+
+      '</button>'+
+      '<button onclick="removeItem(''+item.id+'')" style="background:none;border:none;cursor:pointer;color:var(--tx2);font-size:20px;padding:0 0 0 10px;line-height:1;flex-shrink:0">×</button>'+
+      '</div>';
+  }).join('');
+}
+function jumpOrder(name, cat) {
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('scr-new').classList.add('on');
+  document.querySelectorAll('.tab')[1].classList.add('on');
+  document.getElementById('n-item').value=name;
+  const sel=document.getElementById('n-cat');
+  for(let opt of sel.options){ if(opt.value===cat){sel.value=cat;break} }
+  document.getElementById('n-qty').focus();
+  showToast('「'+name+'」の依頼フォームへ移動しました');
+}
+function addItem() {
+  if(!W.fbReady){showToast('接続中...');return}
+  const name=document.getElementById('i-name').value.trim();
+  if(!name){showToast('品物名を入力してください');return}
+  const newCat=document.getElementById('i-newcat').value.trim();
+  const selCat=document.getElementById('i-cat').value;
+  const category=newCat||selCat||'';
+  if(newCat && !W.cats.find(c=>c.name===newCat)) {
+    W.fbPush(W.fbRef(W.db,'categories'),{name:newCat});
+  }
+  W.fbPush(W.fbRef(W.db,'items'),{name,category});
+  document.getElementById('i-name').value='';
+  document.getElementById('i-newcat').value='';
+  document.getElementById('i-cat').value='';
+  showToast('品物を登録しました ✓');
+  showStab('list');
+}
+function removeItem(id) {
+  if(!W.fbReady) return;
+  W.fbRemove(W.fbRef(W.db,'items/'+id));
+  showToast('削除しました');
+}
+function populateCatSelects() {
+  ['n-cat','i-cat'].forEach(id=>{
+    const sel=document.getElementById(id);
+    if(!sel) return;
+    const val=sel.value;
+    sel.innerHTML='<option value="">カテゴリなし</option>'+
+      W.cats.map(c=>'<option value="'+esc(c.name)+'">'+esc(c.name)+'</option>').join('');
+    sel.value=val;
+  });
+}
+function loadCfg() {
+  const s=JSON.parse(localStorage.getItem('inv_cfg')||'{}');
+  document.getElementById('cfg-name').value=s.name||'';
+  document.getElementById('cfg-nn').checked=s.nn!==false;
+  document.getElementById('cfg-ns').checked=s.ns!==false;
+  document.getElementById('cfg-nu').checked=s.nu!==false;
+}
+function saveCfg() {
+  localStorage.setItem('inv_cfg',JSON.stringify({
+    name: document.getElementById('cfg-name').value,
+    nn: document.getElementById('cfg-nn').checked,
+    ns: document.getElementById('cfg-ns').checked,
+    nu: document.getElementById('cfg-nu').checked,
+  }));
+}
+function askNotif() {
+  if(!('Notification'in window)){showToast('このブラウザは通知非対応です');return}
+  Notification.requestPermission().then(p=>showToast(p==='granted'?'通知を許可しました ✓':'通知が拒否されました'));
+}
+function notify(title,body) {
+  if(!('Notification'in window)) return;
+  if(Notification.permission==='granted') {
+    try{new Notification(title,{body})}catch(e){}
+  }
+}
+function renderShare() {
+  const url=location.href;
+  document.getElementById('share-url').textContent=url;
+  drawQR(url);
+}
+function copyUrl() {
+  const url=location.href;
+  navigator.clipboard.writeText(url).catch(()=>{
+    const t=document.createElement('textarea');
+    t.value=url;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);
+  });
+  showToast('URLをコピーしました 📋');
+}
+function shareUrl() {
+  if(navigator.share) navigator.share({title:'在庫注文依頼',url:location.href});
+  else copyUrl();
+}
+function drawQR(text) {
+  const cv=document.getElementById('qr'),ctx=cv.getContext('2d');
+  const sz=180,cells=25,cell=Math.floor(sz/cells);
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,sz,sz);
+  ctx.fillStyle='#1a1a18';
+  const h=s=>s.split('').reduce((a,c)=>(a<<5)-a+c.charCodeAt(0)|0,0);
+  for(let r=0;r<cells;r++) for(let c=0;c<cells;c++){
+    if((r<7&&c<7)||(r<7&&c>=cells-7)||(r>=cells-7&&c<7)){ctx.fillRect(c*cell,r*cell,cell,cell);continue}
+    if(Math.abs(h(text+r+c))%3===0) ctx.fillRect(c*cell,r*cell,cell,cell);
+  }
+  ctx.fillStyle='#fff';
+  [[1,1],[1,cells-8],[cells-8,1]].forEach(([r,c])=>ctx.fillRect((c+1)*cell,(r+1)*cell,5*cell,5*cell));
+  ctx.fillStyle='#1a1a18';
+  [[2,2],[2,cells-7],[cells-7,2]].forEach(([r,c])=>ctx.fillRect((c+1)*cell,(r+1)*cell,3*cell,3*cell));
+}
+function openImg(src){document.getElementById('imodal-img').src=src;document.getElementById('imodal').classList.add('on')}
+function closeImg(){document.getElementById('imodal').classList.remove('on')}
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),2400);
+}
+function fmtDate(ts) {
+  if(!ts) return '';
+  const d=new Date(ts);
+  return (d.getMonth()+1)+'/'+(d.getDate())+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+setTimeout(()=>{ document.getElementById('loading').style.display='none' },5000);
+(function(){
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><rect width="128" height="128" rx="24" fill="#2563eb"/><rect x="24" y="28" width="80" height="10" rx="5" fill="#fff"/><rect x="24" y="48" width="60" height="10" rx="5" fill="#fff" opacity=".7"/><rect x="24" y="68" width="70" height="10" rx="5" fill="#fff" opacity=".7"/><rect x="24" y="88" width="50" height="10" rx="5" fill="#fff" opacity=".7"/><circle cx="96" cy="96" r="24" fill="#16a34a"/><text x="96" y="103" text-anchor="middle" font-size="28" fill="#fff" font-family="sans-serif" font-weight="700">+</text></svg>';
+  const icon='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(svg)));
+  document.getElementById('pwa-icon').href=icon;
+  const mf={name:'在庫注文依頼',short_name:'在庫注文依頼',display:'standalone',
+    start_url:'./',background_color:'#f5f5f0',theme_color:'#2563eb',
+    icons:[{src:icon,sizes:'512x512',type:'image/svg+xml'}]};
+  document.getElementById('pwa-manifest').href=
+    URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:'application/json'}));
+})();
+</script>
+</body>
+</html>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, onValue, update, remove, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+const cfg = {
+  apiKey: "AIzaSyD9WPry8r8zRtBKpla1TQ9HlZSq3CR2zU0",
+  authDomain: "inventory-app-f4962.firebaseapp.com",
+  databaseURL: "https://inventory-app-f4962-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "inventory-app-f4962",
+  storageBucket: "inventory-app-f4962.firebasestorage.app",
+  messagingSenderId: "819589521178",
+  appId: "1:819589521178:web:ecd7df241136a14c0316a3"
+};
+const app = initializeApp(cfg);
+const db = getDatabase(app);
+onValue(ref(db,'.info/connected'), s => {
+  const ok = s.val();
+  document.getElementById('sdot').className = 'dot'+(ok?' on':'');
+  document.getElementById('slabel').textContent = ok ? '同期中' : 'オフライン';
+  if(ok) document.getElementById('loading').style.display='none';
+});
+onValue(ref(db,'orders'), s => {
+  W.orders = {};
+  if(s.exists()) s.forEach(c => { W.orders[c.key]={id:c.key,...c.val()} });
+  renderOrders(); updateBadge();
+});
+onValue(ref(db,'categories'), s => {
+  W.cats = [];
+  if(s.exists()) s.forEach(c => { W.cats.push({id:c.key,name:c.val().name}) });
+  populateCatSelects();
+  renderItemChips();
+});
+onValue(ref(db,'items'), s => {
+  W.items = {};
+  if(s.exists()) s.forEach(c => { W.items[c.key]={id:c.key,...c.val()} });
+  renderItems();
+});
+W.db = db;
+W.fbRef = ref;
+W.fbPush = push;
+W.fbUpdate = update;
+W.fbRemove = remove;
+W.fbReady = true;
+const s = JSON.parse(localStorage.getItem('inv_cfg')||'{}');
+document.getElementById('cfg-name').value = s.name||'';
+document.getElementById('cfg-nn').checked = s.nn!==false;
+document.getElementById('cfg-ns').checked = s.ns!==false;
+document.getElementById('cfg-nu').checked = s.nu!==false;
+</script>
