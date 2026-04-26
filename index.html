@@ -111,6 +111,7 @@ textarea{resize:none;line-height:1.6}
   <button class="tab" onclick="goTab('items',this)">品物一覧</button>
   <button class="tab" onclick="goTab('cfg',this)">設定</button>
   <button class="tab" onclick="goTab('share',this)">共有</button>
+  <button class="tab" onclick="goTab('qr',this)">QRコード</button>
 </div>
 <div class="scr on" id="scr-list">
   <div class="chips" id="order-chips">
@@ -198,6 +199,18 @@ textarea{resize:none;line-height:1.6}
   <div style="display:flex;justify-content:center;padding:10px 0"><canvas id="qr" width="180" height="180"></canvas></div>
   <p style="font-size:12px;color:var(--tx2);text-align:center">カメラで読み取ると開けます</p>
 </div>
+<div class="scr" id="scr-qr">
+  <div class="stitle" style="text-align:center;font-size:18px;margin-bottom:8px">📲 QRコードで共有</div>
+  <p style="text-align:center;font-size:13px;color:var(--tx2);margin-bottom:16px">このQRコードを読み取るとアプリが開きます</p>
+  <div style="display:flex;justify-content:center;padding:16px 0">
+    <img id="qr-big-img" src="" alt="QRコード" style="width:240px;height:240px;border:4px solid var(--bor);border-radius:12px;background:#fff">
+  </div>
+  <div id="qr-url-display" style="text-align:center;font-size:12px;color:var(--tx2);word-break:break-all;padding:8px 16px;margin-bottom:16px"></div>
+  <div class="srow" style="padding:0 16px 16px">
+    <button class="btn bp" style="flex:1" onclick="copyUrl()">URLをコピー</button>
+    <button class="btn" style="flex:1" onclick="shareUrl()">シェア</button>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -258,6 +271,7 @@ function goTab(name, el) {
   document.getElementById('scr-'+name).classList.add('on');
   el.classList.add('on');
   if(name==='share') renderShare();
+  if(name==='qr') renderQrTab();
   if(name==='cfg') loadCfg();
   if(name==='items') { renderItems(); renderItemChips(); }
 }
@@ -482,6 +496,12 @@ function renderShare() {
   const url=location.href;
   document.getElementById('share-url').textContent=url;
   drawQR(url);
+}
+function renderQrTab() {
+  const url = location.href;
+  document.getElementById('qr-url-display').textContent = url;
+  const encoded = encodeURIComponent(url);
+  document.getElementById('qr-big-img').src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encoded;
 }
 function copyUrl() {
   const url=location.href;
