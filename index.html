@@ -212,55 +212,6 @@ textarea{resize:none;line-height:1.6}
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, update, remove, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-const cfg = {
-  apiKey: "AIzaSyD9WPry8r8zRtBKpla1TQ9HlZSq3CR2zU0",
-  authDomain: "inventory-app-f4962.firebaseapp.com",
-  databaseURL: "https://inventory-app-f4962-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "inventory-app-f4962",
-  storageBucket: "inventory-app-f4962.firebasestorage.app",
-  messagingSenderId: "819589521178",
-  appId: "1:819589521178:web:ecd7df241136a14c0316a3"
-};
-const app = initializeApp(cfg);
-const db = getDatabase(app);
-onValue(ref(db,'.info/connected'), s => {
-  const ok = s.val();
-  document.getElementById('sdot').className = 'dot'+(ok?' on':'');
-  document.getElementById('slabel').textContent = ok ? '同期中' : 'オフライン';
-  if(ok) document.getElementById('loading').style.display='none';
-});
-onValue(ref(db,'orders'), s => {
-  W.orders = {};
-  if(s.exists()) s.forEach(c => { W.orders[c.key]={id:c.key,...c.val()} });
-  renderOrders(); updateBadge();
-});
-onValue(ref(db,'categories'), s => {
-  W.cats = [];
-  if(s.exists()) s.forEach(c => { W.cats.push({id:c.key,name:c.val().name}) });
-  populateCatSelects();
-  renderItemChips();
-});
-onValue(ref(db,'items'), s => {
-  W.items = {};
-  if(s.exists()) s.forEach(c => { W.items[c.key]={id:c.key,...c.val()} });
-  renderItems();
-});
-W.db = db;
-W.fbRef = ref;
-W.fbPush = push;
-W.fbUpdate = update;
-W.fbRemove = remove;
-W.fbReady = true;
-const s = JSON.parse(localStorage.getItem('inv_cfg')||'{}');
-document.getElementById('cfg-name').value = s.name||'';
-document.getElementById('cfg-nn').checked = s.nn!==false;
-document.getElementById('cfg-ns').checked = s.ns!==false;
-document.getElementById('cfg-nu').checked = s.nu!==false;
-</script>
 <script>
 const W = window;
 W.orders = {}; W.cats = []; W.items = {};
