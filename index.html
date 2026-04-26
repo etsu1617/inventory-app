@@ -511,6 +511,7 @@ setTimeout(()=>{ document.getElementById('loading').style.display='none' },5000)
 </body>
 </html>
 <script type="module">
+const W = window;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, push, onValue, update, remove, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
