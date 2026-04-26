@@ -535,18 +535,18 @@ onValue(ref(db,'.info/connected'), s => {
 onValue(ref(db,'orders'), s => {
   W.orders = {};
   if(s.exists()) s.forEach(c => { W.orders[c.key]={id:c.key,...c.val()} });
-  renderOrders(); updateBadge();
+  window.renderOrders(); window.updateBadge();
 });
 onValue(ref(db,'categories'), s => {
   W.cats = [];
   if(s.exists()) s.forEach(c => { W.cats.push({id:c.key,name:c.val().name}) });
-  populateCatSelects();
-  renderItemChips();
+  window.populateCatSelects();
+  window.renderItemChips();
 });
 onValue(ref(db,'items'), s => {
   W.items = {};
   if(s.exists()) s.forEach(c => { W.items[c.key]={id:c.key,...c.val()} });
-  renderItems();
+  window.renderItems();
 });
 W.db = db;
 W.fbRef = ref;
