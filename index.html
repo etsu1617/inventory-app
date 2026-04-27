@@ -236,7 +236,7 @@ function renderOrders() {
   }
   list.innerHTML = arr.map(o => {
     const pc = o.priority==='至急'?'bpc':o.priority==='急ぎ'?'bpu':'bpn';
-    const imgs = (o.images||[]).map(s=>'<img class="ithumb" src="'+s+'" onclick="openImg(''+s+'')">').join('');
+    const imgs = (o.images||[]).map(s=>'<img class="ithumb" src="'+s+'" onclick="openImg(&#39;'+s+'&#39;)">').join('');
     return '<div class="card">'+
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'+
       '<div style="flex:1;min-width:0">'+
@@ -249,8 +249,8 @@ function renderOrders() {
       (o.memo?'<div class="omemo">'+esc(o.memo)+'</div>':'')+
       (imgs?'<div class="ipreview" style="margin-top:8px">'+imgs+'</div>':'')+
       '<div class="arow">'+
-      '<button class="btn bp" onclick="doneOrder(''+o.id+'')">完了にする</button>'+
-      '<button class="btn bd" onclick="cancelOrder(''+o.id+'')">キャンセル</button>'+
+      '<button class="btn bp" onclick="doneOrder(&#39;'+o.id+'&#39;)">完了にする</button>'+
+      '<button class="btn bd" onclick="cancelOrder(&#39;'+o.id+'&#39;)">キャンセル</button>'+
       '</div></div>';
   }).join('');
 }
@@ -342,8 +342,8 @@ function renderItemChips() {
   if(!el) return;
   const cats=[...new Set(Object.values(W.items).map(i=>i.category||'カテゴリなし'))].sort();
   el.innerHTML=[
-    '<button class="chip'+(W.iCatFilter==='all'?' on':'')+'" onclick="setICat('all',this)">すべて</button>',
-    ...cats.map(c=>'<button class="chip'+(W.iCatFilter===c?' on':'')+'" onclick="setICat('+JSON.stringify(c)+',this)">'+esc(c)+'</button>')
+    '<button class="chip'+(W.iCatFilter==='all'?' on':'')+'" onclick="setICat(&#39;all&#39;,this)">すべて</button>',
+    ...cats.map(c=>'<button class="chip'+(W.iCatFilter===c?' on':'')+'" onclick="setICat(&#39;'+JSON.stringify(c)+'&#39;,this)">'+esc(c)+'</button>')
   ].join('');
 }
 function setICat(c, el) {
@@ -371,7 +371,7 @@ function renderItems() {
       (item.category?'<span style="font-size:11px;color:var(--tx2);margin-left:6px">'+esc(item.category)+'</span>':'')+
       '<span style="font-size:11px;color:var(--acc);margin-left:6px">→ 依頼する</span>'+
       '</button>'+
-      '<button onclick="removeItem(''+item.id+'')" style="background:none;border:none;cursor:pointer;color:var(--tx2);font-size:20px;padding:0 0 0 10px;line-height:1;flex-shrink:0">×</button>'+
+      '<button onclick="removeItem(&#39;'+item.id+'&#39;)" style="background:none;border:none;cursor:pointer;color:var(--tx2);font-size:20px;padding:0 0 0 10px;line-height:1;flex-shrink:0">×</button>'+
       '</div>';
   }).join('');
 }
