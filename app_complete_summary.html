@@ -1,0 +1,110 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.w{max-width:660px;margin:0 auto;padding:8px 0;font-size:13px;font-family:var(--font-sans)}
+.hero{background:var(--color-background-success);border-radius:var(--border-radius-lg);padding:16px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.hero-icon{font-size:28px;flex-shrink:0}
+.hero-title{font-size:16px;font-weight:500;color:var(--color-text-success);margin-bottom:3px}
+.hero-url{font-size:12px;color:var(--color-text-success);opacity:.85;word-break:break-all}
+.sec{margin-bottom:16px}
+.ttl{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px;margin-bottom:8px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;color:var(--color-text-secondary);font-weight:500;padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.tbl td{padding:9px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:top;line-height:1.5}
+.tbl tr:last-child td{border-bottom:none}
+.tbl td:first-child{font-weight:500;white-space:nowrap;min-width:80px;color:var(--color-text-secondary)}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;margin:2px}
+.tok{background:var(--color-background-success);color:var(--color-text-success)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;font-size:13px}
+.row:last-child{margin-bottom:0}
+.lbl{color:var(--color-text-secondary);flex-shrink:0}
+.val{color:var(--color-text-primary);font-weight:500;text-align:right;word-break:break-all}
+.fix{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.fix:last-child{border-bottom:none}
+.fix-num{width:20px;height:20px;border-radius:50%;background:var(--color-background-info);color:var(--color-text-info);font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.fix-body{flex:1;color:var(--color-text-primary);line-height:1.5;font-size:13px}
+.fix-body code{background:var(--color-background-secondary);padding:1px 5px;border-radius:4px;font-size:11px;font-family:var(--font-mono)}
+.usage{background:var(--color-background-info);border-radius:var(--border-radius-md);padding:12px 14px;font-size:13px;color:var(--color-text-info);line-height:1.8}
+</style>
+
+<div class="w">
+
+<div class="hero">
+  <div class="hero-icon">🎉</div>
+  <div>
+    <div class="hero-title">在庫注文依頼アプリ — 完成</div>
+    <div class="hero-url">https://etsu1617.github.io/inventory-app/</div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="ttl">インフラ</div>
+  <div class="card">
+    <div class="row"><span class="lbl">ホスティング</span><span class="val">GitHub Pages（完全無料・期限なし）</span></div>
+    <div class="row"><span class="lbl">データベース</span><span class="val">Firebase Realtime Database（シンガポール・無料枠）</span></div>
+    <div class="row"><span class="lbl">プロジェクトID</span><span class="val">inventory-app-f4962</span></div>
+    <div class="row"><span class="lbl">構成</span><span class="val">単一HTMLファイル（index.html）</span></div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="ttl">タブ構成（6タブ）</div>
+  <div class="card" style="padding:0">
+    <table class="tbl">
+      <tr><th>タブ</th><th>内容</th></tr>
+      <tr><td>依頼一覧</td><td>届いた依頼を一覧表示。すべて／未対応フィルター。完了・キャンセルで自動削除</td></tr>
+      <tr><td>新規依頼</td><td>カテゴリ・品目・数量・単位・優先度・メモ・画像添付で依頼送信</td></tr>
+      <tr><td>品物一覧</td><td>登録品物をカテゴリ別表示。タップで依頼フォームへジャンプ</td></tr>
+      <tr><td>設定</td><td>表示名・プッシュ通知（新規／変更／至急）のON/OFF</td></tr>
+      <tr><td>共有</td><td>URLコピー・シェア・QRコード（180px）</td></tr>
+      <tr><td>QRコード</td><td>大きなQRコード（240px）・URLコピー・シェア</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="ttl">修正した内容（3コミット）</div>
+  <div class="card">
+    <div class="fix">
+      <div class="fix-num">1</div>
+      <div class="fix-body"><code>script type="module"</code> を廃止 → Firebase Compat SDK に切り替え。スコープ分離問題を根本解決</div>
+    </div>
+    <div class="fix">
+      <div class="fix-num">2</div>
+      <div class="fix-body">Firebaseスクリプトの挿入位置を <code>&lt;/body&gt;</code> 直前に修正。読み込み順序の問題を解消</div>
+    </div>
+    <div class="fix">
+      <div class="fix-num">3</div>
+      <div class="fix-body">onclick属性内のクォート腐敗（<code>\'</code> → <code>&#39;</code>）を修正。JSエラーを完全解消</div>
+    </div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="ttl">2人での使い始め方</div>
+  <div class="usage">
+    1. <strong>https://etsu1617.github.io/inventory-app/</strong> をLINEで相手に送る<br>
+    2. 両方のスマホで「設定」タブから名前を入力する<br>
+    3. 「ブラウザ通知を許可する」をタップして通知を有効化<br>
+    4. ホーム画面に追加するとアプリのように使える（PWA対応）
+  </div>
+</div>
+
+<div class="sec">
+  <div class="ttl">完了した機能</div>
+  <div class="card">
+    <span class="tag tok">Firebaseリアルタイム同期</span>
+    <span class="tag tok">完了で自動削除</span>
+    <span class="tag tok">品物一覧から依頼ジャンプ</span>
+    <span class="tag tok">カテゴリ絞り込み</span>
+    <span class="tag tok">画像添付（自動圧縮）</span>
+    <span class="tag tok">プッシュ通知</span>
+    <span class="tag tok">PWAアイコン対応</span>
+    <span class="tag tok">QRコード配布</span>
+    <span class="tag tok">URL共有</span>
+    <span class="tag tok">完全無料・期限なし</span>
+  </div>
+</div>
+
+</div>
