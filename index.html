@@ -111,8 +111,13 @@ textarea{resize:none;line-height:1.6}
   <div id="order-list"></div>
 </div>
 <div class="scr" id="scr-new">
-  <div class="fld"><label>カテゴリ</label><select id="n-cat"><option value="">なし</option></select></div>
-  <div class="fld"><label>品目名 <span style="color:var(--red)">*</span></label><input type="text" id="n-item" placeholder="例：ボールペン（黒）"></div>
+  <div class="fld"><label>カテゴリ</label><select id="n-cat" onchange="updateNewItemSelect()"><option value="">なし</option></select></div>
+  <div class="fld">
+    <label>品目名 <span style="color:var(--red)">*</span></label>
+    <div id="n-item-wrap">
+      <input type="text" id="n-item" placeholder="例：ボールペン（黒）">
+    </div>
+  </div>
   <div class="g2 fld">
     <div><label>数量 <span style="color:var(--red)">*</span></label><input type="number" id="n-qty" placeholder="0" min="1"></div>
     <div><label>単位</label><input type="text" id="n-unit" placeholder="個、箱、本..."></div>
@@ -264,8 +269,9 @@ function renderNewPrev(){document.getElementById('n-preview').innerHTML=newImgs.
 function removeImg(i){newImgs.splice(i,1);renderNewPrev();}
 
 function submitOrder(){
-  var item=document.getElementById('n-item').value.trim();
-  var qty=document.getElementById('n-qty').value;
+  var itemEl = document.getElementById('n-item');
+  var item = itemEl.value.trim();
+  var qty = document.getElementById('n-qty').value;
   if(!item||!qty){showToast('品目と数量は必須です');return;}
   var cfg=JSON.parse(localStorage.getItem('inv_cfg')||'{}');
   var unit=document.getElementById('n-unit').value.trim()||'個';
@@ -288,13 +294,61 @@ function submitOrder(){
   document.querySelectorAll('.pbt')[0].className='pbt pn';
   selPri='normal';
   showToast('依頼を送信しました');
+  updateNewItemSelect(); // リセット後にUI更新
+}
+
+function updateNewItemSelect() {
+  var cat = document.getElementById('n-cat').value;
+  var wrap = document.getElementById('n-item-wrap');
+  var filtered = Object.values(items).filter(function(i){ return (i.category||'') === cat; });
+  
+  if (cat && filtered.length > 0) {
+    var options = '<option value="">品目を選択...</option>' + 
+      filtered.map(function(i){ return '<option value="'+esc(i.name)+'">'+esc(i.name)+'</option>'; }).join('') +
+      '<option value="__manual__">手入力する...</option>';
+    wrap.innerHTML = '<select id="n-item-sel" onchange="checkManualInput(this)">' + options + '</select>' +
+                     '<input type="text" id="n-item" style="display:none;margin-top:8px" placeholder="品名を入力">';
+  } else {
+    wrap.innerHTML = '<input type="text" id="n-item" placeholder="例：ボールペン（黒）">';
+  }
+}
+
+function checkManualInput(sel) {
+  var input = document.getElementById('n-item');
+  if (sel.value === '__manual__') {
+    input.style.display = 'block';
+    input.value = '';
+    input.focus();
+  } else {
+    input.style.display = 'none';
+    input.value = sel.value;
+  }
 }
 
 function showStab(name){var isList=name==='list';document.getElementById('sp-list').style.display=isList?'':'none';document.getElementById('sp-reg').style.display=isList?'none':'';document.getElementById('st-list').className='stab'+(isList?' on':'');document.getElementById('st-reg').className='stab'+(!isList?' on':'');}
 function renderItemChips(){var el=document.getElementById('item-chips');if(!el)return;var allCats=[];Object.values(items).forEach(function(i){var c=i.category||'カテゴリなし';if(allCats.indexOf(c)<0)allCats.push(c);});allCats.sort();el.innerHTML='<button class="chip'+(iCatFilter==='all'?' on':'')+'" onclick="setICat(\'all\',this)">すべて</button>'+allCats.map(function(c){return'<button class="chip'+(iCatFilter===c?' on':'')+'" onclick="setICat(decodeURIComponent(\''+encodeURIComponent(c)+'\'),this)">'+esc(c)+'</button>';}).join('');}
 function setICat(c,el){iCatFilter=c;document.querySelectorAll('#item-chips .chip').forEach(function(b){b.classList.remove('on');});el.classList.add('on');renderItems();}
 function renderItems(){var el=document.getElementById('item-list');if(!el)return;var arr=Object.values(items);if(iCatFilter!=='all')arr=arr.filter(function(i){return(i.category||'カテゴリなし')===iCatFilter;});arr.sort(function(a,b){return a.name.localeCompare(b.name,'ja');});if(!arr.length){el.innerHTML='<div class="empty"><div class="eicon">📦</div><p>品物が登録されていません</p></div>';return;}el.innerHTML=arr.map(function(item){return'<div class="card" style="display:flex;align-items:center;padding:12px 13px;margin-bottom:8px"><button onclick="jumpOrder(decodeURIComponent(\''+encodeURIComponent(item.name)+'\'),decodeURIComponent(\''+encodeURIComponent(item.category||'')+'\'))" style="flex:1;text-align:left;background:none;border:none;cursor:pointer;font-family:inherit;padding:0"><span style="font-size:15px;font-weight:500;color:var(--tx)">'+esc(item.name)+'</span>'+(item.category?'<span style="font-size:11px;color:var(--tx2);margin-left:6px">'+esc(item.category)+'</span>':'')+'<span style="font-size:11px;color:var(--acc);margin-left:6px">→ 依頼する</span></button><button onclick="removeItem(\''+item.id+'\')" style="background:none;border:none;cursor:pointer;color:var(--tx2);font-size:20px;padding:0 0 0 10px;line-height:1;flex-shrink:0">×</button></div>';}).join('');}
-function jumpOrder(name,cat){document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});document.getElementById('scr-new').classList.add('on');document.querySelectorAll('.tab')[1].classList.add('on');document.getElementById('n-item').value=name;var sel=document.getElementById('n-cat');for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===cat){sel.value=cat;break;}}document.getElementById('n-qty').focus();showToast(name+'の依頼フォームへ移動しました');}
+function jumpOrder(name,cat){
+  document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});
+  document.getElementById('scr-new').classList.add('on');
+  document.querySelectorAll('.tab')[1].classList.add('on');
+  
+  var catSel = document.getElementById('n-cat');
+  catSel.value = cat;
+  updateNewItemSelect();
+  
+  var itemSel = document.getElementById('n-item-sel');
+  if (itemSel) {
+    itemSel.value = name;
+    document.getElementById('n-item').value = name;
+  } else {
+    document.getElementById('n-item').value = name;
+  }
+  document.getElementById('n-qty').focus();
+  showToast(name+'の依頼フォームへ移動しました');
+}
 function addItem(){var name=document.getElementById('i-name').value.trim();if(!name){showToast('品物名を入力してください');return;}var newCat=document.getElementById('i-newcat').value.trim();var selCat=document.getElementById('i-cat').value;var category=newCat||selCat||'';if(newCat&&!cats.find(function(c){return c.name===newCat;})){db.ref('categories').push({name:newCat});}db.ref('items').push({name:name,category:category});document.getElementById('i-name').value='';document.getElementById('i-newcat').value='';document.getElementById('i-cat').value='';showToast('品物を登録しました');showStab('list');}
 function removeItem(id){db.ref('items/'+id).remove();showToast('削除しました');}
 function populateCatSelects(){['n-cat','i-cat'].forEach(function(id){var sel=document.getElementById(id);if(!sel)return;var val=sel.value;sel.innerHTML='<option value="">カテゴリなし</option>'+cats.map(function(c){return'<option value="'+esc(c.name)+'">'+esc(c.name)+'</option>';}).join('');sel.value=val;});}
